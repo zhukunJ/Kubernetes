@@ -2,7 +2,7 @@
 
 
 - **搭建生产环境可用的Kubernetes集群**
-      Kubernetes的主要组件以及一些基本概念，部署一个生产环境可用的Kubernetes集群，安装Kubernetes常用的插件，接下来为大家讲解在生成环境如何去升级已有的Kubernetes集群，如何轻松管理多个Kubernetes集群；
+      Kubernetes的主要组件以及一些基本概念，部署一个生产环境可用的Kubernetes集群，安装Kubernetes常用的插件，在生成环境如何去升级已有的Kubernetes集群，如何轻松管理多个Kubernetes集群；
 
 - **Kubernetes编排基础** 
       Pod基础与进阶，包括Pod的原理，API对象、Pod资源限制、Pod健康检查、生命周期管理、共享卷、Pod调度相关知识及生产环境建议及操作实践；Kubernetes常用资源对象，主要包括ReplicaSet、Deployment、StatefulSet、DeamonSet、Job等等；权限管理，包括ServiceAccount介绍、RBAC基于角色的访问控制等等；
