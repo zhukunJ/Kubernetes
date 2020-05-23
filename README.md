@@ -1,4 +1,4 @@
-# Kubernetes技术实践（进阶篇）
+# Kubernetes技术实践
 
 
 - **搭建生产环境可用的Kubernetes集群** Kubernetes的主要组件以及一些基本概念，部署一个生产环境可用的Kubernetes集群，安装Kubernetes常用的插件，接下来为大家讲解在生成环境如何去升级已有的Kubernetes集群，如何轻松管理多个Kubernetes集群；
