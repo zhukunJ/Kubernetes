@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    cattle.io/creator: norman
+    workload.user.cattle.io/workloadselector: deployment-mydlqcloud-rabbitmq
+  name: rabbitmq
+  namespace: mydlqcloud
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      workload.user.cattle.io/workloadselector: deployment-mydlqcloud-rabbitmq
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        cattle.io/timestamp: "2020-07-14T12:11:07Z"
+        field.cattle.io/ports: '[null]'
+      creationTimestamp: null
+      labels:
+        workload.user.cattle.io/workloadselector: deployment-mydlqcloud-rabbitmq
+    spec:
+      containers:
+      - image: rabbitmq
+        imagePullPolicy: Always
+        name: rabbitmq
+        resources: {}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {}
+          privileged: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: false
+        stdin: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        tty: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2020-07-14T12:11:39Z"
+    lastUpdateTime: "2020-07-14T12:11:39Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2020-07-14T12:11:07Z"
+    lastUpdateTime: "2020-07-14T12:11:39Z"
+    message: ReplicaSet "rabbitmq-cf85d8d4" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 3
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1
