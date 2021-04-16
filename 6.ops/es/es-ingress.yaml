@@ -1,0 +1,21 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: 5m
+  name: es-k8s
+  namespace: es
+spec:
+  rules:
+  - host: bes.kaikeba.com
+    http:
+      paths:
+      - backend:
+          serviceName: elasticsearch-client
+          servicePort: 9200
+        path: /
+  tls:
+  - hosts:
+    - bes.kaikeba.com
+    secretName: kkb-nginx-cert

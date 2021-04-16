@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elastalert-rules
+  namespace: monitoring
+data:
+  rule.yaml: |+
+    es_host: 192.168.23.32
+    es_port: 9200
+    name: kaikeba-learn-center
+    type: frequency
+    run_every:
+      minutes: 1
+    index: apilaravel-* 
+    num_events: 1
+    timeframe:
+      minutes: 1
+    filter:
+    - query:
+        query_string:
+          query: "message: *.ERROR AND message: stacktrace"
+    alert:
+    - "elastalert_modules.dingtalk_alert.DingTalkAlerter"
+    dingtalk_webhook: "https://oapi.dingtalk.com/robot/send?access_token=f9e75a4eb55f939070a543a03c375dec0e2eafbe8ea30383b28b9004ee1e3c78"
+    dingtalk_msgtype: text
+
+    alert_text: "
+    索引 : {}\n
+    服务 : {}\n
+    主机 : {}\n
+    topic: {}\n
+    日志 : {}
+    "
+    alert_text_type: alert_text_only
+
+    alert_text_args:
+    - index
+    - _index
+    - agent.hostname
+    - topic
+    - message
+
+  rule2.yaml: |+
+    es_host: 192.168.23.32
+    es_port: 9200
+    name: kkb-nginx-error
+    type: frequency
+    run_every:
+      minutes: 1
+    index: nginx-error*
+    num_events: 1
+    timeframe:
+      minutes: 1
+    filter:
+    - query:
+        query_string:
+          query: "NOT message: forbidden AND NOT message: peer AND NOT message: handshaking"
+    alert:
+    - "elastalert_modules.dingtalk_alert.DingTalkAlerter"
+    dingtalk_webhook: "https://oapi.dingtalk.com/robot/send?access_token=41017fbf3a96422f064b4bc39e4fdfae690aec40746a86ed94a6315c62455dc5"
+    dingtalk_msgtype: text
+
+    alert_text: "
+    索引 : {}\n
+    topic: {}\n
+    主机 : {}\n
+    路径 : {}\n
+    日志 : {}
+    "
+    alert_text_type: alert_text_only
+
+    alert_text_args:
+    - index
+    - topic
+    - agent.hostname
+    - log.file.path
+    - message

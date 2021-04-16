@@ -1,0 +1,142 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: jenkins
+  name: jenkins
+  namespace: ops
+spec:
+  serviceName: jenkins-headless
+  replicas: 1
+  updateStrategy:
+    type: RollingUpdate
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      serviceAccount: jenkins
+      initContainers:
+      - name: fix-permissions
+        image: busybox
+        command: ["sh", "-c", "chown -R 1000:1000 /var/jenkins_home"]
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: jenkinshome
+          mountPath: /var/jenkins_home
+      - name: sw-agent-sidecar
+        image: registry.cn-beijing.aliyuncs.com/aoisola/skywalking-agent-sidecar:8.1.0
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        command: ['sh']
+        args: ['-c','cp -r /data/skywalking/agent/ /skywalking/ && chown -R 1000:1000 /skywalking/']
+        volumeMounts:
+        - name: sw-agent
+          mountPath: /skywalking
+      containers:
+      - name: mirror
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: 100m
+            memory: 100Mi
+        volumeMounts:
+        - name: nginx-conf
+          readOnly: true
+          mountPath: /etc/nginx
+      - name: jenkins
+        image: jenkins/jenkins:lts
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: web
+          protocol: TCP
+        - containerPort: 50000
+          name: agent
+          protocol: TCP
+        env:
+        - name: JENKINS_HOME
+          value: /var/jenkins_home
+        - name: JENKINS_OPTS 
+          value: --httpPort=8080
+        - name: JENKINS_SLAVE_AGENT_PORT
+          value: "50000"
+        - name: JAVA_OPTS
+          value: -Xms2g -Xmx2g -Xmn700m -javaagent:/skywalking/agent/skywalking-agent.jar
+        - name: SW_AGENT_NAME  #定义skywalking 中名称
+          value: jenkins
+        - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES  #skywalking oap 11800 gRPC端口
+          value: skywalking-oap.es.svc.cluster.local:11800
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2000Mi
+          limits:
+            cpu: 2000m
+            memory: 4000Mi
+        livenessProbe:
+          httpGet:
+            path: /login
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        volumeMounts:
+        - name: jenkinshome
+          mountPath: /var/jenkins_home
+        - name: sw-agent
+          mountPath: /skywalking
+        - name: localtime
+          mountPath: /etc/localtime
+      securityContext:
+        fsGroup: 1000
+      volumes:
+      - name: nginx-conf
+        configMap:
+          name: jenkins-mirror-conf
+          items:
+          - key: nginx.conf
+            path: nginx.conf
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+      - name: sw-agent
+        emptyDir: {}
+      hostAliases:
+      - ip: 127.0.0.1
+        hostnames:
+        - mirrors.jenkins-ci.org
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: jenkinshome
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: rook-ceph-block
+      resources:
+        requests:
+          storage: 10Gi
+        
