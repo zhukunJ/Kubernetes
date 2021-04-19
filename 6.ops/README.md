@@ -66,7 +66,7 @@ spec:
       containers:
       - name: log-pilot
         # 版本请参考https://github.com/AliyunContainerService/log-pilot/releases。
-        image: registry.cn-hangzhou.aliyuncs.com/acs/log-pilot:0.9.6-filebeat
+        image: registry.cn-beijing.aliyuncs.com/aoisola/log-pilot:v0.9.7-filebeat
         resources:
           limits:
             memory: 500Mi
@@ -159,6 +159,54 @@ aliyun_logs_logs-access=/usr/local/tomcat/logs/catalina.*.log表示要收集容�
     - name: aliyun_logs_logs-access
       value: "/usr/local/tomcat/logs/catalina.*.log"
     # 容器内文件日志路径需要配置emptyDir。
+
+```
+- 配置多行匹配
+```sh
+# 拉取代码
+git clone https://github.com/AliyunContainerService/log-pilot.git
+cd log-pilot
+git tag
+git checkout v0.9.7
+
+# 修改filebeat模板
+vim log-pilot/assets/filebeat/filebeat.tpl
+
+{{range .configList}}
+- type: log
+  enabled: true
+  paths:
+      - {{ .HostDir }}/{{ .File }}
+  multiline.pattern: '^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' #新增正则条件，以日期开头
+  multiline.negate: true                                           #新增
+  multiline.match: after                                           #新增
+  multiline.max_lines: 10000                                       #新增
+  scan_frequency: 10s
+  fields_under_root: true
+  {{if .Stdout}}
+  docker-json: true
+  {{end}}
+  {{if eq .Format "json"}}
+  json.keys_under_root: true
+  {{end}}
+  fields:
+      {{range $key, $value := .Tags}}
+      {{ $key }}: {{ $value }}
+      {{end}}
+      {{range $key, $value := $.container}}
+      {{ $key }}: {{ $value }}
+      {{end}}
+  tail_files: false
+  close_inactive: 2h
+  close_eof: false
+  close_removed: true
+  clean_removed: true
+  close_renamed: false
+
+{{end}}
+
+# 构建镜像
+docker build -t registry.cn-beijing.aliyuncs.com/aoisola/log-pilot:v0.9.7-filebeat -f Dockerfile.filebeat .
 
 ```
 

@@ -1,0 +1,274 @@
+# Default values for nginx.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nginx: &elastalertImage
+  repository: registry.cn-beijing.aliyuncs.com/aoisola/elastalert
+  tag: alpine-3.13
+
+kind: Deployment
+
+# replicaCount: 1
+
+#sts滚动更新策略
+updateStrategy:
+  type: RollingUpdate
+podManagementPolicy: Parallel
+
+
+image:
+  <<: *elastalertImage
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# env:
+#   a: Tom
+#   b: jack
+
+# command: 
+#   - "touch 1"
+
+
+
+
+# livenessProbe:
+#   type: command
+#   command: "echo 1"
+#   config:
+#     failureThreshold: 3 #检查重试次数
+#     periodSeconds: 10 #pod启动成功后检查间隔时间
+#     successThreshold: 1 #最小成功次数
+#     timeoutSeconds: 1 #检查超时时间
+#     initialDelaySeconds: 10 #pod启动后多久才进行检查
+
+# livenessProbe:
+#   type: tcpSocket
+#   port: 80
+#   config:
+#     failureThreshold: 3 #检查重试次数
+#     periodSeconds: 10 #pod启动成功后检查间隔时间
+#     successThreshold: 1 #最小成功次数
+#     timeoutSeconds: 1 #检查超时时间
+#     initialDelaySeconds: 10 #pod启动后多久才进行检查
+
+# livenessProbe:
+#   type: httpGet
+#   path: /
+#   port: http
+#   config:
+#     failureThreshold: 3 #检查重试次数
+#     periodSeconds: 10 #pod启动成功后检查间隔时间
+#     successThreshold: 1 #最小成功次数
+#     timeoutSeconds: 1 #检查超时时间
+#     initialDelaySeconds: 10 #pod启动后多久才进行检查
+
+# readinessProbe:
+#   type: httpGet
+#   path: /
+#   port: http
+#   config:
+#     failureThreshold: 3 #检查重试次数
+#     periodSeconds: 10 #pod启动成功后检查间隔时间
+#     successThreshold: 1 #最小成功次数
+#     timeoutSeconds: 1 #检查超时时间
+#     initialDelaySeconds: 10 #pod启动后多久才进行检查
+
+volumes:
+  - name: elastalert-conf
+    mountPath: /opt/conf/config.yaml
+    type: configmap
+    subPath: config.yaml
+    cm_config:
+      config.yaml: |
+        rules_folder: rules
+        run_every:
+          minutes: 1
+        buffer_time:
+          minutes: 2
+        es_host: elasticsearch-client
+        es_port: 9200
+        es_username: elastic
+        es_password: mydlq123
+        realert: 0
+        writeback_index: elastalert_status
+        writeback_alias: elastalert_alerts
+        alert_time_limit:
+          days: 1
+
+
+  - name: elastalert-rules
+    mountPath: /opt/rules/rule.yaml
+    type: configmap
+    subPath: rule.yaml
+    cm_config:
+      rule.yaml: |
+        es_host: elasticsearch-client
+        es_port: 9200
+        es_username: elastic
+        es_password: mydlq123
+        name: kaikeba-learn-center
+        type: frequency
+        run_every:
+          minutes: 1
+        index: apilaravel-* 
+        num_events: 1
+        timeframe:
+          minutes: 1
+        filter:
+        - query:
+            query_string:
+              query: "message: *.ERROR AND message: stacktrace"
+        alert:
+        - "elastalert_modules.dingtalk_alert.DingTalkAlerter"
+        dingtalk_webhook: "https://oapi.dingtalk.com/robot/send?access_token=f9e75a4eb55f939070a543a03c375dec0e2eafbe8ea30383b28b9004ee1e3c78"
+        dingtalk_msgtype: text
+
+        alert_text: "
+        索引 : {}\n
+        服务 : {}\n
+        主机 : {}\n
+        topic: {}\n
+        日志 : {}
+        "
+        alert_text_type: alert_text_only
+
+        alert_text_args:
+        - index
+        - _index
+        - agent.hostname
+        - topic
+        - message
+        
+      rule2.yaml: |
+        es_host: elasticsearch-client
+        es_port: 9200
+        es_username: elastic
+        es_password: mydlq123
+        name: kkb-nginx-error
+        type: frequency
+        run_every:
+          minutes: 1
+        index: nginx-error*
+        num_events: 1
+        timeframe:
+          minutes: 1
+        filter:
+        - query:
+            query_string:
+              query: "NOT message: forbidden AND NOT message: peer AND NOT message: handshaking"
+        alert:
+        - "elastalert_modules.dingtalk_alert.DingTalkAlerter"
+        dingtalk_webhook: "https://oapi.dingtalk.com/robot/send?access_token=41017fbf3a96422f064b4bc39e4fdfae690aec40746a86ed94a6315c62455dc5"
+        dingtalk_msgtype: text
+
+        alert_text: "
+        索引 : {}\n
+        topic: {}\n
+        主机 : {}\n
+        路径 : {}\n
+        日志 : {}
+        "
+        alert_text_type: alert_text_only
+
+        alert_text_args:
+        - index
+        - topic
+        - agent.hostname
+        - log.file.path
+        - message
+
+
+
+
+  # - name: nfs
+  #   mountPath: /nfs
+  #   type: volumeClaimTemplates
+  #   persistence:
+  #     storageClass: nfs
+  #     accessModes:
+  #       - ReadWriteMany
+  #     resources:
+  #       requests:
+  #         storage: 5Gi
+
+
+
+
+
+servicetype: ClusterIP
+service:
+  - name: http
+    port: 80
+    containerPort: 80
+    protocol: TCP
+
+  - name: https
+    port: 443
+    containerPort: 443
+    protocol: TCP
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# nodeSelector:
+#   html: gpu
+
+tolerations: []
+
+affinity: {}
