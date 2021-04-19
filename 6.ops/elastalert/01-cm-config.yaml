@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elastalert-conf
+  namespace: es
+data:
+  config.yaml: |+
+    rules_folder: rules
+    run_every:
+      minutes: 1
+    buffer_time:
+      minutes: 2
+    es_host: elasticsearch-client
+    es_port: 9200
+    es_username: elastic
+    es_password: mydlq123
+    realert: 0
+    writeback_index: elastalert_status
+    writeback_alias: elastalert_alerts
+    alert_time_limit:
+      days: 1
