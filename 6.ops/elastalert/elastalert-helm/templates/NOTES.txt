@@ -1,0 +1,5 @@
+部署成功： {{ .Release.Name }} 
+当前版本号: {{ .Release.Revision }}
+命名空间: {{ .Release.Namespace }}
+如需回滚请执行：
+helm rollback -n {{ .Release.Namespace }} {{ .Release.Name }} 

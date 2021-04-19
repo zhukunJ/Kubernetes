@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elastalert-conf
+  namespace: es
+data:
+  config.yaml: |+
+    rules_folder: rules
+    run_every:
+      minutes: 1
+    buffer_time:
+      minutes: 2
+    es_host: elasticsearch-client
+    es_port: 9200
+    es_username: elastic
+    es_password: mydlq123
+    realert: 0
+    writeback_index: elastalert_status
+    writeback_alias: elastalert_alerts
+    alert_time_limit:
+      days: 1
+
+
+
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elastalert-rules
+  namespace: es
+data:
+  rule.yaml: |+
+    es_host: elasticsearch-client
+    es_port: 9200
+    es_username: elastic
+    es_password: mydlq123
+    name: nginx-alert
+    type: frequency
+    run_every:
+      minutes: 1
+    index: logs-access*
+    num_events: 1
+    timeframe:
+      minutes: 1
+    filter:
+    - query:
+        query_string:
+          query: "message: 200"
+    alert:
+    - "elastalert_modules.dingtalk_alert.DingTalkAlerter"
+    dingtalk_webhook: "https://oapi.dingtalk.com/robot/send?access_token=581d337655eb5ef1407e65acf83e07b6f2e8f05b0f2007e25f707028d147ab73"
+    dingtalk_msgtype: text
+
+    alert_text: "
+    索引 : {}\n
+    服务 : {}\n
+    主机 : {}\n
+    topic: {}\n
+    日志 : {}
+    "
+    alert_text_type: alert_text_only
+
+    alert_text_args:
+    - index
+    - _index
+    - agent.hostname
+    - topic
+    - message
+
