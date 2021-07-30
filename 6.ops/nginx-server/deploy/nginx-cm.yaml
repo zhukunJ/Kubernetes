@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-conf
+  namespace: ops
+data:
+  nginx.conf: |
+    #user  nobody;
+    worker_processes  2;
+    error_log  /dev/stderr;
+    events {
+      worker_connections  1024;
+    }
+    http {
+      include       mime.types;
+      default_type  application/octet-stream;
+
+      geoip_country       /usr/share/GeoIP/GeoIP.dat;
+      geoip_city          /usr/share/GeoIP/GeoLiteCity.dat;
+      geoip_org           /usr/share/GeoIP/GeoIPASNum.dat;
+      geoip_proxy         127.0.0.1;
+      geoip_proxy_recursive on;
+
+      vhost_traffic_status_zone shared:vhost_traffic_status:32m;
+      vhost_traffic_status_filter_by_host on;
+
+      #access_log  "pipe:rollback logs/access_log interval=1d baknum=7 maxsize=2G"  main;
+      access_log   /var/log/nginx/access.log json_analytics;
+
+      log_format json_analytics escape=json '{'
+          '"msec": "$msec", '                               # request unixtime in seconds with a milliseconds resolution
+          '"connection": "$connection", '                   # connection serial number
+          '"connection_requests": "$connection_requests", ' # number of requests made in connection
+          '"pid": "$pid", '                         # process pid
+          '"request_id": "$request_id", '           # the unique request id
+          '"request_length": "$request_length", '   # request length (including headers and body)
+          '"remote_addr": "$remote_addr", '         # client IP
+          '"remote_user": "$remote_user", '         # client HTTP username
+          '"remote_port": "$remote_port", '         # client port
+          '"time_iso8601": "$time_iso8601", '       # local time in the ISO 8601 standard format
+          '"request": "$request", '                 # full path no arguments if the request
+          '"request_uri": "$request_uri", '         # full path and arguments if the request
+          '"args": "$args", '                       # args
+          '"status": "$status", '                   # response status code
+          '"body_bytes_sent": "$body_bytes_sent", ' # the number of body bytes exclude headers sent to a client
+          '"bytes_sent": "$bytes_sent", '           # the number of bytes sent to a client
+          '"http_referer": "$http_referer", '       # HTTP referer
+          '"http_user_agent": "$http_user_agent", '                 # user agent
+          '"http_x_forwarded_for": "$proxy_add_x_forwarded_for", '  # http_x_forwarded_for
+          '"x_forwarded_for": "$proxy_add_x_forwarded_for", '
+          '"http_host": "$http_host", '                   # the request Host: header
+          '"server_name": "$server_name", '               # the name of the vhost serving the request
+          '"request_time": "$request_time", '             # request processing time in seconds with msec resolution
+          '"upstream": "$upstream_addr", '                # upstream backend server for proxied requests
+          '"upstream_connect_time": "$upstream_connect_time", '         # upstream handshake time incl. TLS
+          '"upstream_header_time": "$upstream_header_time", '           # time spent receiving upstream headers
+          '"upstream_response_time": "$upstream_response_time", '       # time spend receiving upstream body
+          '"upstream_response_length": "$upstream_response_length", '   # upstream response length
+          '"upstream_cache_status": "$upstream_cache_status", '         # cache HIT/MISS where applicable
+          '"ssl_protocol": "$ssl_protocol", '                           # TLS protocol
+          '"ssl_cipher": "$ssl_cipher", '                               # TLS cipher
+          '"scheme": "$scheme", '                                       # http or https
+          '"request_method": "$request_method", '                       # request method
+          '"server_protocol": "$server_protocol", '           # request protocol, like HTTP/1.1 or HTTP/2.0
+          '"pipe": "$pipe", '                                 # "p" if request was pipelined, "." otherwise
+          '"gzip_ratio": "$gzip_ratio", '
+          '"http_cf_ray": "$http_cf_ray", '
+          '"geoip_city": "$geoip_city", '
+          '"geoip_country_code": "$geoip_country_code"'
+          '}';
+
+      server {
+          listen      8090;
+          server_name 127.0.0.1 localhost;
+          access_log  off;
+          allow       127.0.0.1;
+          deny        all;
+
+          # 在不想统计流量的server区域禁用vhost_traffic_status
+          # vhost_traffic_status off;
+
+          location /status {
+              vhost_traffic_status_display;
+              vhost_traffic_status_display_format html;
+          }
+      }
+
+      server {
+          listen 80;
+          server_name www.shenxiaoshuai.com;
+          location / {
+            proxy_redirect off;
+            proxy_pass https://www.baidu.com/;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header Accept-Encoding "";
+            proxy_set_header Accept-Language "zh-CN";
+          }
+          index index.html index.htm index.php;
+          location ~ /\. {
+            deny all;
+          }
+      }
+
+        server {
+            server_name geoip.shenxiaoshuai.com;
+            location / {
+                default_type text/plain;
+                return 200 "大洲: $geoip_city_continent_code
+    国家: $geoip_country_code, $geoip_country_code3, $geoip_country_name
+    城市: $geoip_region_name, $geoip_city
+    经纬: $geoip_longitude, $geoip_latitude \n";
+            }
+        }
+
+
+    }

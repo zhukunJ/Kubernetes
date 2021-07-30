@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-server
+  namespace: ops
+spec:
+  selector:
+    matchLabels:
+      app: nginx-server
+  template:
+    metadata:
+      labels:
+        app: nginx-server
+    spec:
+      containers:
+      - name: nginx-server
+        image: registry.cn-beijing.aliyuncs.com/aoisola/nginx-server:base-2.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 80
+        - name: web
+          containerPort: 84
+        - name: https
+          containerPort: 443
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 10
+          failureThreshold: 5
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "2000m"
+            memory: "2048Mi"
+        volumeMounts:
+        - name: nginx-conf
+          subPath: nginx.conf
+          mountPath: /usr/local/nginx/nginx.conf
+      - name: nginx-vts-exporter
+        image: sophos/nginx-vts-exporter
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: NGINX_STATUS
+            value: "http://localhost:8090/status/format/json"
+        ports:
+          - name: nginx-vts-exporter
+            containerPort: 9913
+            protocol: TCP
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
+      hostAliases:
+      - ip: 127.0.0.1
+        hostnames:
+        - geoip.shenxiaoshuai.com
+        - www.shenxiaoshuai.com
+      volumes:
+      - name: nginx-conf
+        configMap:
+          name: nginx-conf
+          items:
+          - key: nginx.conf
+            path: nginx.conf

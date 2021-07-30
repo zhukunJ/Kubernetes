@@ -29,16 +29,6 @@ spec:
         volumeMounts:
         - name: jenkinshome
           mountPath: /var/jenkins_home
-      - name: sw-agent-sidecar
-        image: registry.cn-beijing.aliyuncs.com/aoisola/skywalking-agent-sidecar:8.1.0
-        imagePullPolicy: IfNotPresent
-        securityContext:
-          privileged: true
-        command: ['sh']
-        args: ['-c','cp -r /data/skywalking/agent/ /skywalking/ && chown -R 1000:1000 /skywalking/']
-        volumeMounts:
-        - name: sw-agent
-          mountPath: /skywalking
       containers:
       - name: mirror
         image: nginx:1.7.9
@@ -74,10 +64,6 @@ spec:
           value: "50000"
         - name: JAVA_OPTS
           value: -Xms2g -Xmx2g -Xmn700m -javaagent:/skywalking/agent/skywalking-agent.jar -Duser.timezone=Asia/Shanghai
-        - name: SW_AGENT_NAME  #定义skywalking 中名称
-          value: jenkins
-        - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES  #skywalking oap 11800 gRPC端口
-          value: skywalking-oap.es.svc.cluster.local:11800
         resources:
           requests:
             cpu: 500m
@@ -106,8 +92,6 @@ spec:
         volumeMounts:
         - name: jenkinshome
           mountPath: /var/jenkins_home
-        - name: sw-agent
-          mountPath: /skywalking
         - name: localtime
           mountPath: /etc/localtime
       securityContext:
@@ -122,8 +106,6 @@ spec:
       - name: localtime
         hostPath:
           path: /etc/localtime
-      - name: sw-agent
-        emptyDir: {}
       hostAliases:
       - ip: 127.0.0.1
         hostnames:
@@ -139,4 +121,3 @@ spec:
       resources:
         requests:
           storage: 10Gi
-        
