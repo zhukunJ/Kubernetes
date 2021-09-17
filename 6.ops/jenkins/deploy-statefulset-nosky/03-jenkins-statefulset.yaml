@@ -63,7 +63,7 @@ spec:
         - name: JENKINS_SLAVE_AGENT_PORT
           value: "50000"
         - name: JAVA_OPTS
-          value: -Xms2g -Xmx2g -Xmn700m -javaagent:/skywalking/agent/skywalking-agent.jar -Duser.timezone=Asia/Shanghai
+          value: -Xms2g -Xmx2g -Xmn700m  -Duser.timezone=Asia/Shanghai
         resources:
           requests:
             cpu: 500m
@@ -117,7 +117,7 @@ spec:
       name: jenkinshome
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: rook-ceph-block
+      storageClassName: nfs
       resources:
         requests:
           storage: 10Gi
