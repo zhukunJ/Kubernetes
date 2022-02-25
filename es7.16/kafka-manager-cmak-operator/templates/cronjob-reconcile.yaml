@@ -1,0 +1,54 @@
+{{- $nm := include "cmak.name" . -}}
+{{- $dict := .Values.image | default (dict "tag" .Chart.Version "repository" (printf "%s/eshepelyuk/cmak2zk" .Values.imageRegistry)) -}}
+{{- $image := printf "%s:%s" $dict.repository $dict.tag -}}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ $nm }}-reconcile
+  labels:
+    {{- include "cmak.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.reconcile.successfulJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ .Values.reconcile.successfulJobsHistoryLimit }}
+  {{- end }}
+  {{- if .Values.reconcile.failedJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.reconcile.failedJobsHistoryLimit }}
+  {{- end }}
+  schedule: {{ .Values.reconcile.schedule | quote }}
+  concurrencyPolicy: "Forbid"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          {{- with .Values.reconcile.annotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        spec:
+          restartPolicy: Never
+          volumes:
+            - name: {{ $nm }}-clusters
+              configMap:
+                name: {{ $nm }}-clusters
+          {{- with .Values.nodeSelector }}
+          nodeSelector: {{  toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity: {{  toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations: {{  toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: setup
+              image: {{ $image | quote }}
+              args:
+                - '{{ .Values.reconcile.overwriteZk | ternary "--" "--no-" }}overwrite-zk'
+                - '{{ $nm }}.{{ $.Release.Namespace }}:2181'
+                - '/app/etc/clusters.yaml'
+              volumeMounts:
+                - name: {{ $nm }}-clusters
+                  mountPath: /app/etc
+              {{- with .Values.reconcile.resources }}
+              resources: {{ . | toYaml | nindent 16 }}
+              {{- end }}

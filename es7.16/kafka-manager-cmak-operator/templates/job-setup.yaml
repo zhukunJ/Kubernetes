@@ -1,0 +1,45 @@
+{{- $nm := include "cmak.name" . -}}
+{{- $dict := .Values.image | default (dict "tag" .Chart.Version "repository" (printf "%s/eshepelyuk/cmak2zk" .Values.imageRegistry)) -}}
+{{- $image := printf "%s:%s" $dict.repository $dict.tag -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $nm }}-setup
+  labels:
+    {{- include "cmak.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      {{- with .Values.reconcile.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      restartPolicy: Never
+      volumes:
+        - name: {{ $nm }}-clusters
+          configMap:
+            name: {{ $nm }}-clusters
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{  toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{  toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: setup
+          image: {{ $image | quote }}
+          args:
+            - '{{ .Values.reconcile.overwriteZk | ternary "--" "--no-" }}overwrite-zk'
+            - '{{ $nm }}.{{ $.Release.Namespace }}:2181'
+            - '/app/etc/clusters.yaml'
+          volumeMounts:
+            - name: {{ $nm }}-clusters
+              mountPath: /app/etc

@@ -1,0 +1,185 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/eshepelyuk/cmak-operator/",
+  "title": "CMAK operator Helm values",
+
+  "definitions": {
+    "curatorConfigCommon": {
+      "type": "object", "title": "curator framework settings for zookeeper",
+      "properties": {
+        "zkMaxRetry": { "type": "integer", "default": 100 },
+        "baseSleepTimeMs": { "type": "integer", "default": 100 },
+        "maxSleepTimeMs": { "type": "integer", "default": 1000 }
+      }
+    },
+    "curatorConfig": {
+      "type": "object", "required": ["zkConnect"],
+      "allOf": [
+        { "$ref": "#/definitions/curatorConfigCommon" },
+        { "properties": {
+            "zkConnect": {
+              "type": "string", "title": "zookeeper connection string",
+              "description": "Zookeeper addresses joined by , host1:port,host2:port,host3:port"
+            }
+          }
+        }
+      ]
+    },
+    "clusterConfigShared": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true, "title": "either cluster enabled" },
+        "kafkaVersion": { "type": "string", "default": "2.2.0" },
+        "jmxEnabled": { "type": "boolean", "default": false },
+        "jmxUser": { "type": ["null", "string"], "default": null },
+        "jmxPass": { "type": ["null", "string"], "default": null },
+        "jmxSsl": { "type": "boolean", "default": false },
+        "pollConsumers": { "type": "boolean", "default": true },
+        "filterConsumers": { "type": "boolean", "default": false },
+        "logkafkaEnabled": { "type": "boolean", "default": false },
+        "activeOffsetCacheEnabled": { "type": "boolean", "default": true },
+        "displaySizeEnabled": { "type": "boolean", "default": false }
+      }
+    },
+    "clusterConfigCommon": {
+      "type": "object", "required": ["curatorConfig"], "title": "common config for all declared clusters",
+      "allOf": [
+        { "$ref": "#/definitions/clusterConfigShared" },
+        { "properties": {
+            "curatorConfig": { "$ref": "#/definitions/curatorConfigCommon" }
+          }
+        }
+      ]
+    },
+    "clusterConfig": {
+      "type": "object", "required": ["name", "curatorConfig"], "title": "config for particular cluster",
+      "allOf": [
+        { "$ref": "#/definitions/clusterConfigShared" },
+        { "properties": {
+            "name": { "type": "string", "title": "display name for the cluster" },
+            "curatorConfig": { "$ref": "#/definitions/curatorConfig" }
+          }
+        }
+      ]
+    },
+    "resources": {
+      "type": "object", "title": "resource requests and limits", "additionalProperties": false,
+      "required": ["limits", "requests"],
+      "description": "See https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+      "properties": {
+        "limits": { "type": "object", "title": "resource limits", "default": {} },
+        "requests": { "type": "object", "title": "resource requests", "default": {} }
+      }
+    },
+    "tls": {
+      "type": ["null", "object"], "title": "use TLS secret", "default": null,
+      "properties": {
+        "secret": { "type": "string", "title": "Secret name to attach to the ingress object" }
+      }
+    },
+    "consumerSsl": {
+      "type": "object", "title": "Consumer SSL configuration", "default": null,
+      "properties": {
+        "keystore": {
+          "type": "object", "title": "keystore configuration",
+          "properties": {
+            "type": { "type": "string" },
+            "password": { "type": "string" },
+            "value": { "type": "string", "description": "base64 encoded keystore" }
+          }
+        },
+        "truststore": {
+          "type": "object", "title": "truststore configuration",
+          "properties": {
+            "type": { "type": "string" },
+            "password": { "type": "string" },
+            "value": { "type": "string", "description": "base64 encoded truststore" }
+          }
+        }
+      }
+    }
+  },
+  "type": "object", "required": ["cmak", "reconcile", "ui", "zk"],
+  "properties": {
+    "imageRegistry": { "type": "string", "default": "docker.io", "title": "docker registry for all images of the chart" },
+    "affinity": {
+      "type": "object", "default": {}, "title": "affinity",
+      "description": "See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity"
+    },
+    "nodeSelector": {
+      "type": "object", "default": {}, "title": "node selector",
+      "description": "See https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes/"
+    },
+    "tolerations": {
+      "type": "array", "default": [], "title": "tolerations",
+      "description": "See https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/",
+      "items": {"type": "object"}
+    },
+    "reconcile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schedule"], "title": "reconciliation job config",
+      "properties": {
+        "schedule": {
+          "type": "string", "default": "*/3 * * * *", "title": "cron expression for periodic reconciliation"
+        },
+        "overwriteZk": {
+          "type": "boolean", "default": true, "title": "allow overwrite Zookeeper settings of CMAK"
+        },
+        "successfulJobsHistoryLimit": {
+          "type": ["null", "integer"], "default": null, "title": "number of completed jobs to keep"
+        },
+        "failedJobsHistoryLimit": {
+          "type": ["null", "integer"], "default": null, "title": "number of failed jobs to keep"
+        },
+        "annotations": {
+          "type": "object", "title": "optional annotations to apply to the pods spun up via the job", "default": {}
+        },
+        "resources": { "$ref":  "#/definitions/resources" }
+      }
+    },
+    "cmak": {
+      "type": "object", "additionalProperties": false, "title": "cmak instance settings",
+      "description": "Those settings are mirroring CMAK UI preferences.",
+      "required": ["clustersCommon", "clusters"],
+      "properties": {
+        "clustersCommon": { "$ref": "#/definitions/clusterConfigCommon" },
+        "clusters": {
+          "type": "array", "title": "list of configured clusters",
+          "items": { "$ref": "#/definitions/clusterConfig" }
+        }
+      }
+    },
+    "ui": {
+      "type": "object", "title": "ui container k8s settings", "additionalProperties": false,
+      "properties": {
+        "port": {"type": "integer", "default": 9000},
+        "extraArgs": { "type": "array", "title": "extra cmd line arguments", "items": {"type": "string"}, "default": [] },
+        "resources": { "$ref":  "#/definitions/resources" },
+        "consumerProperties": { "type": "object", "title": "provide key value base pairs for consumer properties according to java docs", "default": {} },
+        "consumerPropertiesSsl": { "$ref": "#/definitions/consumerSsl" },
+        "extraEnv": { "type": "array", "title": "optional environment variables", "items": {"type": "object"}, "default": [] }
+      }
+    },
+    "zk": {
+      "type": "object", "title": "zk container k8s settings", "additionalProperties": false,
+      "required": ["version"],
+      "properties": {
+        "resources": { "$ref":  "#/definitions/resources" },
+        "version": { "type": "string", "title": "zk version", "default": "3.6.1" }
+      }
+    },
+    "ingress": {
+      "type": ["null", "object"], "title": "ingress configuration", "default": null, "additionalProperties": false,
+      "description": "If object not null, then Ingress resources will be created.",
+      "required": ["host", "path"],
+      "properties": {
+        "host": { "type": "string", "title": "ingress host" },
+        "path": { "type": "string", "title": "ingress path" },
+        "pathType": { "type": "string", "title": "ingress pathType", "default": "ImplementationSpecific" },
+        "tls": { "$ref": "#/definitions/tls" },
+        "labels": { "type": "object", "title": "optional ingress labels", "default": {} },
+        "annotations": { "type": "object", "title": "optional ingress annotations", "default": {} }
+      }
+    }
+  }
+}

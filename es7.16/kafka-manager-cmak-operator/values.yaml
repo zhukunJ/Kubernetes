@@ -1,0 +1,153 @@
+imageRegistry: docker.io
+
+# mirroring CMAK UI preferences for Kafka clusters
+cmak:
+  clustersCommon:
+    curatorConfig:
+      zkMaxRetry: 100
+      baseSleepTimeMs: 100
+      maxSleepTimeMs: 1000
+    enabled: true
+    kafkaVersion: "2.2.0"
+    jmxEnabled: false
+    jmxUser: null
+    jmxPass: null
+    jmxSsl: false
+    pollConsumers: true
+    filterConsumers: false
+    logkafkaEnabled: false
+    activeOffsetCacheEnabled: true
+    displaySizeEnabled: false
+    tuning:
+      brokerViewUpdatePeriodSeconds: 30
+      clusterManagerThreadPoolSize: 10
+      clusterManagerThreadPoolQueueSize: 100
+      kafkaCommandThreadPoolSize: 10
+      kafkaCommandThreadPoolQueueSize: 100
+      logkafkaCommandThreadPoolSize: 10
+      logkafkaCommandThreadPoolQueueSize: 100
+      logkafkaUpdatePeriodSeconds: 30
+      partitionOffsetCacheTimeoutSecs: 5
+      brokerViewThreadPoolSize: 10
+      brokerViewThreadPoolQueueSize: 1000
+      offsetCacheThreadPoolSize: 10
+      offsetCacheThreadPoolQueueSize: 1000
+      kafkaAdminClientThreadPoolSize: 10
+      kafkaAdminClientThreadPoolQueueSize: 1000
+      kafkaManagedOffsetMetadataCheckMillis: 30000
+      kafkaManagedOffsetGroupCacheSize: 1000000
+      kafkaManagedOffsetGroupExpireDays: 7
+    securityProtocol: PLAINTEXT
+    saslMechanism: null
+    jaasConfig: null
+
+  clusters: []
+
+reconcile:
+  schedule: "*/3 * * * *"
+  overwriteZk: true
+  successfulJobsHistoryLimit: null
+  failedJobsHistoryLimit: null
+  annotations: {}
+  # reconcile resource configuration
+  # resources:
+  #   limits:
+  #     cpu: 100m
+  #     memory: 128Mi
+  #   requests:
+  #     cpu: 100m
+  #     memory: 128Mi
+
+# various settings for CMAK UI container and CMAK application
+ui:
+  port: 9000
+  # additional command line arguments
+  extraArgs:
+    - "-DbasicAuthentication.enabled=true"
+    - "-DbasicAuthentication.username=admin"
+    - "-DbasicAuthentication.password=admin123"
+  #- "-DbasicAuthentication.enabled=false"
+
+  ## resource requests and limits
+  ## http://kubernetes.io/docs/user-guide/compute-resources/
+  resources:
+    limits: {}
+    #   cpu: 100m
+    #   memory: 128Mi
+    requests: {}
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  # Cosumer Properties
+  consumerProperties: {}
+    # Key value pairs of values to add into consumer properties.
+    # default values which will be added if not specified here:
+    # key.deserializer: "org.apache.kafka.common.serialization.ByteArrayDeserializer"
+    # value.deserializer: "org.apache.kafka.common.serialization.ByteArrayDeserializer"
+
+  # Consumer SSL configurations
+  consumerPropertiesSsl: {}
+    # keystore:
+    #   type: PKCS
+    #   password: test123
+    #   value: <some base64 encoded keystore>
+    # truststore:
+    #   type: JKS
+    #   password: test123
+    #   value: <some base64 encoded keystore>
+
+  # Additional environment variables (declared as k8s style)
+  # ref: https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/
+  extraEnv: []
+    # - name: GREETING
+    #   value: "Warm greetings to"
+    # - name: SECRET_USERNAME
+    #   valueFrom:
+    #     secretKeyRef:
+    #       name: mysecret
+    #       key: username
+    # - name: SPECIAL_LEVEL_KEY
+    #   valueFrom:
+    #     configMapKeyRef:
+    #       name: special-config
+    #       key: SPECIAL_LEVEL
+
+# various settings for Zookeeper container
+zk:
+  version: "3.6.1"
+  ## resource requests and limits
+  ## http://kubernetes.io/docs/user-guide/compute-resources/
+  resources:
+    limits: {}
+    #   cpu: 100m
+    #   memory: 128Mi
+    requests: {}
+    #   cpu: 100m
+    #   memory: 128Mi
+
+# uncomment section and remove null to create Ingress resource
+ingress: null
+  # # ingress host
+  # host: www.cmak.mycompany
+  #
+  # # ingress path
+  # path: /
+  # pathType: ImplementationSpecific
+  #
+  # # Enable TLS configuration for the hostname defined at ingress.host
+  # # secret name will be "${ingress.host.replace(".", "-")}"
+  # tls: null
+  #   # secret: null
+  #
+  # # optional ingress annotations
+  # annotations: {}
+  #
+  # # optional ingress labels
+  # labels: {}
+
+affinity: {}
+
+nodeSelector: {}
+
+tolerations: []
+

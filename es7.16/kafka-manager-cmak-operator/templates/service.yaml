@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cmak.name" . | quote }}
+  labels:
+    {{- include "cmak.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: zk
+      port: 2181
+      targetPort: zk
+      protocol: TCP
+    - name: http
+      port: {{ .Values.ui.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "cmak.selectorLabels" . | nindent 4 }}
