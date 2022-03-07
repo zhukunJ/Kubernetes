@@ -1,0 +1,264 @@
+---
+replicas: 1
+
+
+alicaconfig:
+  config.py: |
+    class BaseConfig:
+        # 阿里云access ID
+        ALI_ACCESS_KEY_ID = "LTAI5tB4qvmpCWGXposafb79"
+
+        # 阿里云access key
+        ALI_ACCESS_SECRET = "YNVYK8Jp8PDUUdk8wPzdk0Fpv5V6be"
+
+        # 阿里云mns消息地址
+        MNS_ENDPOINT = "http://1143387709276565.mns.cn-shanghai.aliyuncs.com"
+
+        # 阿里云mns队列名称
+        MNS_QUEUENAME = "k8s-CA"
+
+        #MNS 队列几秒监听一次
+        MNS_WAIT_SECONDS = 6
+
+        # k8s 集群认证URL和TOKEN k8s 判断节点是都Ready
+        KUBERNETES_API_URL = "https://47.116.64.88:6443"
+        KUBERNETES_TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6InVObkc5N3p2a1lvMnA2M0FoQ2pqd0IzUWtWblVDOFgtbmswQ2w2ejJBMkUifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZC10b2tlbi1wZ2Y3NiIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6ImVhODg2NDU3LWRmNzgtNDI2OS04OTc4LWM5NDZhMjg0YTY2OSIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlcm5ldGVzLWRhc2hib2FyZDprdWJlcm5ldGVzLWRhc2hib2FyZCJ9.b0-zg1samZGrta3P8frU2ljm6lUrT7VfPqzfjvrYHQKSiRdiE41NO9KjA4EBn-tZScx2NNi8274qBfWt84UG7t0hmNft0PgFYCD5SX4MYAgzoH6nJOUVCEVcH8Y8IWS6CqcSg0KFUjAgrcyuQ38we-0IaBOeja0epPNhWfnSg8bDchfE9guO7SfGSCIN1jJgMfNFF89j4kFTzusv29ewciRvwvb1s0UmoJe5U54F9I3wgkzzKG1_xFK4d_Iq9_cx169xECZgoi8YFvzXn5MczxQvx4KC1L73UwCVS44ITxw8Ak9kLMlkBdQph09O9by2ZhLaYaKG6PUXAnmIQ_-R1Q"
+
+
+        #判断节点加入时间，单位秒
+        NODE_WAIT_SECONDS = 120
+
+        #判断节点删除，单位秒
+        NODE_DEL_SECONDS = 120
+
+        # 阿里云机器人webhook和secret地址，用于扩容或缩容发送通知
+        DINGTALK_WEBHOOK_URL = 'https://oapi.dingtalk.com/robot/send?access_token=1d4ec7e3f6c8ce964128af23f2d654a9290fb2c03a307f52388e1045bec043cf'
+        DINGTALK_SECRET = 'SECf051dae02cd7767ba4f419f68b738812804def37effcc564b7d55c163ea7a884'
+
+        # 钉钉@功能，可默认不添加，格式为列表
+        DINGTALK_AT_LIST = []
+
+
+
+
+extraEnvs: []
+#  - name: MY_ENVIRONMENT_VAR
+#    value: the_value_goes_here
+
+# Allows you to load environment variables from kubernetes secret or config map
+envFrom: []
+# - secretRef:
+#     name: env-secret
+# - configMapRef:
+#     name: config-map
+
+# Add sensitive data to k8s secrets
+secrets: []
+#  - name: "env"
+#    value:
+#      ELASTICSEARCH_PASSWORD: "LS1CRUdJTiBgUFJJVkFURSB"
+#      api_key: ui2CsdUadTiBasRJRkl9tvNnw
+#  - name: "tls"
+#    value:
+#      ca.crt: |
+#        LS0tLS1CRUdJT0K
+#        LS0tLS1CRUdJT0K
+#        LS0tLS1CRUdJT0K
+#        LS0tLS1CRUdJT0K
+#      cert.crt: "LS0tLS1CRUdJTiBlRJRklDQVRFLS0tLS0K"
+#      cert.key.filepath: "secrets.crt" # The path to file should be relative to the `values.yaml` file.
+
+# A list of secrets and their paths to mount inside the pod
+secretMounts: []
+
+hostAliases: []
+#- ip: "127.0.0.1"
+#  hostnames:
+#  - "foo.local"
+#  - "bar.local"
+
+image: "registry.cn-beijing.aliyuncs.com/kkb2/alica"
+imageTag: "1.03"
+imagePullPolicy: "IfNotPresent"
+imagePullSecrets: 
+  - name: kuick-regsecret
+
+
+podAnnotations: {}
+
+labels: {}
+
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "1536Mi"
+  limits:
+    cpu: "1000m"
+    memory: "1536Mi"
+
+
+rbac:
+  create: true
+  serviceAccountAnnotations: {}
+  serviceAccountName: ""
+  annotations:
+    {}
+    #annotation1: "value1"
+    #annotation2: "value2"
+    #annotation3: "value3"
+
+podSecurityPolicy:
+  create: false
+  name: ""
+  spec:
+    privileged: false
+    fsGroup:
+      rule: RunAsAny
+    runAsUser:
+      rule: RunAsAny
+    seLinux:
+      rule: RunAsAny
+    supplementalGroups:
+      rule: RunAsAny
+    volumes:
+      - secret
+      - configMap
+      - persistentVolumeClaim
+
+
+extraVolumes:
+  ""
+  # - name: extras
+  #   emptyDir: {}
+
+extraVolumeMounts:
+  ""
+  # - name: extras
+  #   mountPath: /usr/share/extras
+  #   readOnly: true
+
+extraContainers:
+  ""
+  # - name: do-something
+  #   image: busybox
+  #   command: ['do', 'something']
+
+extraInitContainers:
+  ""
+  # - name: do-something
+  #   image: busybox
+  #   command: ['do', 'something']
+
+# This is the PriorityClass settings as defined in
+# https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass
+priorityClassName: ""
+
+# By default this will make sure two pods don't end up on the same node
+# Changing this to a region would allow you to spread pods across regions
+antiAffinityTopologyKey: "kubernetes.io/hostname"
+
+# Hard means that by default pods will only be scheduled if there are enough nodes for them
+# and that they will never end up on the same node. Setting this to soft will do this "best effort"
+antiAffinity: "hard"
+
+# This is the node affinity settings as defined in
+# https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+nodeAffinity: {}
+
+# This is inter-pod affinity settings as defined in
+# https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+podAffinity: {}
+
+# The default is to deploy all pods serially. By setting this to parallel all pods are started at
+# the same time when bootstrapping the cluster
+
+httpPort: 5001
+
+extraPorts:
+  []
+  # - name: beats
+  #   containerPort: 5001
+
+updateStrategy: RollingUpdate
+
+# This is the max unavailable setting for the pod disruption budget
+# The default value of 1 will make sure that kubernetes won't allow more than 1
+# of your pods to be unavailable during maintenance
+maxUnavailable: 1
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  # readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+terminationGracePeriod: 120
+
+
+livenessProbe:
+  tcpSocket:
+    port: 5001
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+
+
+readinessProbe:
+  tcpSocket:
+    port: 5001
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+
+
+## Use an alternate scheduler.
+## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+##
+schedulerName: ""
+
+nodeSelector: {}
+tolerations: []
+
+nameOverride: ""
+fullnameOverride: "alica"
+
+lifecycle:
+  {}
+  # preStop:
+  #   exec:
+  #     command: ["/bin/sh", "-c", "echo Hello from the postStart handler > /usr/share/message"]
+  # postStart:
+  #   exec:
+  #     command: ["/bin/sh", "-c", "echo Hello from the postStart handler > /usr/share/message"]
+
+service: {}
+#  annotations: {}
+#  type: ClusterIP
+#  loadBalancerIP: ""
+#  ports:
+#    - name: beats
+#      port: 5044
+#      protocol: TCP
+#      targetPort: 5044
+#    - name: http
+#      port: 8080
+#      protocol: TCP
+#      targetPort: 8080
+
+ingress:
+  enabled: false
+  className: "nginx"
+  pathtype: ImplementationSpecific
+  hosts:
+    - host: example.local
+      paths:
+        - path: /
+  tls: []
+#  annotations: {}

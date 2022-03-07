@@ -1,0 +1,8 @@
+apiVersion: v1
+appVersion: 1.0.1
+description: 阿里弹性伸缩CA
+maintainers:
+- email: 18810437307@163.com
+  name: zhukj
+name: alica
+version: 1.0.1

@@ -1,0 +1,17 @@
+{{- if .Values.alicaconfig }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "alica.fullname" . }}-config
+  labels:
+    app: "{{ template "alica.fullname" . }}"
+    chart: "{{ .Chart.Name }}"
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+data:
+{{- range $path, $config := .Values.alicaconfig }}
+  {{ $path }}: |
+{{ tpl $config $ | indent 4 -}}
+{{- end -}}
+{{- end -}}

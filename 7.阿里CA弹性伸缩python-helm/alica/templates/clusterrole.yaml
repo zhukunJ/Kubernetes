@@ -1,0 +1,19 @@
+{{- if .Values.rbac.create -}}
+{{- $fullName := include "alica.fullname" . -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $fullName | quote }}
+  labels:
+    app: "{{ template "alica.fullname" . }}"
+    chart: "{{ .Chart.Name }}"
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+rules:
+  - apiGroups:
+      - "*"
+    resources:
+      - "*"
+    verbs:
+      - "*"
+{{- end -}}
