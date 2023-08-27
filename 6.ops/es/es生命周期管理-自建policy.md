@@ -138,7 +138,7 @@ PUT _component_template/mylogs-settings
 - 大于7.10的新版本，一定要在默认的索引模板页面点点点克隆
 - 模板名称为 mylogs，匹配类型为 mylogs-*
 
-### 5.创建新索引策略
+### 5.创建索引生命周期策略
 ```json
 PUT _ilm/policy/mypolicy
 {
@@ -218,7 +218,7 @@ Warm phase -> Data allocation -> Data tier options -> {Custom}
 Cold phase -> Data allocation -> Data tier options -> {Custom}
                                  Select a node attribute -> {box_type:cold}
 ```
-### 5.关联索引策略和索引模板
+### 5.关联索引生命周期策略和索引模板
 >- http://127.0.0.1:5601/app/management/data/index_lifecycle_management/policies
 >- 在索引生命周期页面关联 mypolicy 策略和 mylogs 索引模板
 
