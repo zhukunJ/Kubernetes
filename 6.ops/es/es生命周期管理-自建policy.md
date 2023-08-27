@@ -211,7 +211,7 @@ PUT _ilm/policy/mypolicy
 ```
 ```sh
 # http://127.0.0.1:5601/app/management/data/index_lifecycle_management/policies/edit/logs 
-在默认的策略下关联 
+在默认索引生命周期策略【logs】下关联 ，因为我们下面的kafka配置中要input（logs.* 和mylogs.*）两种索引开头
 Warm phase -> Data allocation -> Data tier options -> {Custom}
                                  Select a node attribute -> {box_type:warm}
 
