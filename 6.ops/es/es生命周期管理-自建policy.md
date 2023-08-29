@@ -103,7 +103,7 @@ PUT _cluster/settings
 ### 3.创建组件模板
 - 目的是为了让生命周期从hot开始
 ```json
-// 组件模板
+// 组件模板(仿照组件模板中的logs-settings)
 PUT _component_template/mylogs-settings
 {
   "template" : {
