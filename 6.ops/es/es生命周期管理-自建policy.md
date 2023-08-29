@@ -136,7 +136,7 @@ PUT _component_template/mylogs-settings
 ```
 ### 4.clone默认的索引模板
 - 大于7.10的新版本，一定要在默认的索引模板页面点点点克隆
-- 模板名称为 mylogs，匹配类型为 mylogs-*
+- 模板选择第三步创建组件的模板：mylogs，匹配类型为 mylogs-*
 
 ### 5.创建索引生命周期策略
 ```json
